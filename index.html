@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>North Star</title>
+<style>
+  :root{
+    --bg: #191919;
+    --text: #e8e6e3;
+    --muted: #918f8b;
+    --line: #33322f;
+    --field: #232323;
+    --field-focus: #2b2b2b;
+    --good: #6fbf9e;
+    --wait: #d9b36a;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg: #ffffff;
+      --text: #37352f;
+      --muted: #8f8d87;
+      --line: #ebeae7;
+      --field: #f5f4f2;
+      --field-focus: #ecebe8;
+      --good: #2f8f6b;
+      --wait: #b07f2a;
+    }
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg)}
+  body{
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    color:var(--text);
+    padding:18px 20px 20px;
+    max-width:640px;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* inputs */
+  .inputs{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px 24px;
+  }
+  .row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    min-height:32px;
+  }
+  .row label{
+    font-size:13.5px;
+    color:var(--muted);
+    white-space:nowrap;
+  }
+  .row .wrap{
+    display:flex;
+    align-items:center;
+    background:var(--field);
+    border-radius:6px;
+    padding:0 8px;
+  }
+  .row .wrap:focus-within{background:var(--field-focus)}
+  .row .unit{font-size:13.5px;color:var(--muted)}
+  .row input{
+    font:inherit;
+    font-size:14.5px;
+    font-variant-numeric:tabular-nums;
+    color:var(--text);
+    background:none;
+    border:none;
+    outline:none;
+    text-align:right;
+    width:78px;
+    padding:5px 2px;
+  }
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  input[type=number]{-moz-appearance:textfield;appearance:textfield}
+
+  hr{border:none;border-top:1px solid var(--line);margin:16px 0 14px}
+
+  /* targets */
+  .revline{
+    font-size:13.5px;
+    color:var(--muted);
+    margin-bottom:12px;
+  }
+  .revline b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+  .targets{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+  }
+  .t .label{font-size:13.5px;color:var(--muted)}
+  .t .num{
+    font-size:34px;
+    font-weight:700;
+    letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums;
+    line-height:1.15;
+    margin:2px 0 8px;
+  }
+  .bar{
+    height:4px;
+    border-radius:2px;
+    background:var(--line);
+    overflow:hidden;
+  }
+  .bar i{
+    display:block;
+    height:100%;
+    width:0%;
+    border-radius:2px;
+    background:var(--good);
+    transition:width .35s ease;
+  }
+  .t.behind .bar i{background:var(--wait)}
+  .t .sub{
+    font-size:12.5px;
+    color:var(--muted);
+    margin-top:6px;
+    font-variant-numeric:tabular-nums;
+  }
+  .t .sub b{color:var(--text);font-weight:600}
+
+  .foot{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    margin-top:16px;
+    font-size:12.5px;
+    color:var(--muted);
+    font-variant-numeric:tabular-nums;
+  }
+
+  @media (max-width:520px){
+    .inputs{grid-template-columns:1fr}
+    .targets{gap:14px}
+    .t .num{font-size:27px}
+  }
+</style>
+</head>
+<body>
+
+  <div class="inputs">
+    <div class="row"><label for="profit">Profit goal</label><span class="wrap"><span class="unit">$</span><input id="profit" type="number" min="0" step="1000" value="50000"></span></div>
+    <div class="row"><label for="offer">Offer price</label><span class="wrap"><span class="unit">$</span><input id="offer" type="number" min="1" step="100" value="5000"></span></div>
+    <div class="row"><label for="expenses">Expenses</label><span class="wrap"><span class="unit">$</span><input id="expenses" type="number" min="0" step="500" value="5000"></span></div>
+    <div class="row"><label for="wprice">Workshop price</label><span class="wrap"><span class="unit">$</span><input id="wprice" type="number" min="0" step="1" value="97"></span></div>
+    <div class="row"><label for="lw">Leads &rarr; workshop</label><span class="wrap"><input id="lw" type="number" min="0.1" max="100" step="0.5" value="5"><span class="unit">%</span></span></div>
+    <div class="row"><label for="wc">Workshop &rarr; client</label><span class="wrap"><input id="wc" type="number" min="0.1" max="100" step="0.5" value="10"><span class="unit">%</span></span></div>
+  </div>
+
+  <hr>
+
+  <div class="revline">Revenue needed this month: <b id="revenue">$55,000</b></div>
+
+  <div class="targets">
+    <div class="t" id="t-leads">
+      <div class="label">Leads</div>
+      <div class="num" id="n-leads">1,860</div>
+      <div class="bar"><i id="b-leads"></i></div>
+      <div class="sub"><b id="a-leads">0</b> so far</div>
+    </div>
+    <div class="t" id="t-sales">
+      <div class="label">Workshop sales</div>
+      <div class="num" id="n-sales">93</div>
+      <div class="bar"><i id="b-sales"></i></div>
+      <div class="sub"><b id="a-sales">0</b> so far</div>
+    </div>
+    <div class="t" id="t-clients">
+      <div class="label">Clients</div>
+      <div class="num" id="n-clients">10</div>
+      <div class="bar"><i id="b-clients"></i></div>
+      <div class="sub"><b id="a-clients">0</b> so far</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span id="pace"></span>
+    <span id="stamp"></span>
+  </div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var fields = ["profit","expenses","offer","wprice","lw","wc"];
+  var money = function(n){ return "$" + Math.round(n).toLocaleString("en-US"); };
+  var int = function(n){ return Math.round(n).toLocaleString("en-US"); };
+
+  var actuals = { leads: 0, workshopSales: 0, clients: 0, updated: null };
+  var targets = { leads: 0, sales: 0, clients: 0 };
+
+  // restore saved inputs
+  try {
+    var saved = JSON.parse(localStorage.getItem("northstar-calc") || "{}");
+    fields.forEach(function(f){ if (saved[f] != null) $(f).value = saved[f]; });
+  } catch(e){}
+
+  function calc(){
+    var profit   = +$("profit").value   || 0;
+    var expenses = +$("expenses").value || 0;
+    var offer    = +$("offer").value    || 0;
+    var wprice   = +$("wprice").value   || 0;
+    var lw = (+$("lw").value || 0) / 100;
+    var wc = (+$("wc").value || 0) / 100;
+
+    var revenue = profit + expenses;
+    var perSale = wc * offer + wprice;
+
+    targets.sales   = perSale > 0 ? Math.ceil(revenue / perSale) : 0;
+    targets.clients = Math.ceil(targets.sales * wc);
+    targets.leads   = lw > 0 ? Math.ceil(targets.sales / lw) : 0;
+
+    $("revenue").textContent   = money(revenue);
+    $("n-leads").textContent   = int(targets.leads);
+    $("n-sales").textContent   = int(targets.sales);
+    $("n-clients").textContent = int(targets.clients);
+
+    var save = {};
+    fields.forEach(function(f){ save[f] = $(f).value; });
+    try { localStorage.setItem("northstar-calc", JSON.stringify(save)); } catch(e){}
+
+    paint();
+  }
+
+  function paint(){
+    var now = new Date();
+    var day = now.getDate();
+    var days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    var pace = day / days;
+
+    [["leads", actuals.leads],
+     ["sales", actuals.workshopSales],
+     ["clients", actuals.clients]].forEach(function(pair){
+      var key = pair[0], actual = pair[1] || 0;
+      var target = targets[key];
+      var pct = target > 0 ? actual / target : 0;
+      $("a-" + key).textContent = int(actual);
+      $("b-" + key).style.width = Math.min(100, pct * 100) + "%";
+      $("t-" + key).classList.toggle("behind", pct < pace && pct < 1);
+    });
+
+    $("pace").textContent = "Day " + day + " of " + days +
+      " \u00b7 month pace " + Math.round(pace * 100) + "%";
+    $("stamp").textContent = actuals.updated
+      ? "Actuals updated " + actuals.updated
+      : "Actuals not synced yet";
+  }
+
+  fields.forEach(function(f){ $(f).addEventListener("input", calc); });
+
+  fetch("./actuals.json?ts=" + Date.now())
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(data){
+      if (data) {
+        actuals.leads = +data.leads || 0;
+        actuals.workshopSales = +data.workshopSales || 0;
+        actuals.clients = +data.clients || 0;
+        actuals.updated = data.updated || null;
+      }
+      paint();
+    })
+    .catch(function(){ paint(); });
+
+  calc();
+})();
+</script>
+</body>
+</html>
