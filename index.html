@@ -180,6 +180,8 @@
     <div class="t" id="t-revenue">
       <div class="label">Revenue</div>
       <div class="num" id="n-revenue">$0</div>
+      <div class="bar"><i id="b-revenue"></i></div>
+      <div class="sub"><b id="a-revenue">$0</b> so far</div>
     </div>
   </div>
 
@@ -196,7 +198,7 @@
   var int = function(n){ return Math.round(n).toLocaleString("en-US"); };
 
   var actuals = { leads: 0, workshopSales: 0, clients: 0, updated: null };
-  var targets = { leads: 0, sales: 0, clients: 0 };
+  var targets = { leads: 0, sales: 0, clients: 0, revenue: 0 };
 
   // matches Growth Math sheet formulas exactly:
   // Gross profit = (Operating expenses + Personal expenses + Net profit) / (1 - Estimated tax %)
@@ -220,13 +222,13 @@
     targets.sales   = wc > 0 ? Math.ceil(targets.clients / wc) : 0;
     targets.leads   = lw > 0 ? Math.ceil(targets.sales / lw) : 0;
 
-    var revenue = targets.sales * wprice + targets.clients * offer;
+    targets.revenue = targets.sales * wprice + targets.clients * offer;
 
     $("revenue").textContent   = money(grossProfit);
     $("n-leads").textContent   = int(targets.leads);
     $("n-sales").textContent   = int(targets.sales);
     $("n-clients").textContent = int(targets.clients);
-    $("n-revenue").textContent = money(revenue);
+    $("n-revenue").textContent = money(targets.revenue);
 
     paint();
   }
@@ -237,13 +239,18 @@
     var days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     var pace = day / days;
 
-    [["leads", actuals.leads],
-     ["sales", actuals.workshopSales],
-     ["clients", actuals.clients]].forEach(function(pair){
-      var key = pair[0], actual = pair[1] || 0;
+    var wprice = +$("wprice").value || 0;
+    var offer  = +$("offer").value  || 0;
+    var actualRevenue = (actuals.workshopSales || 0) * wprice + (actuals.clients || 0) * offer;
+
+    [["leads", actuals.leads, int],
+     ["sales", actuals.workshopSales, int],
+     ["clients", actuals.clients, int],
+     ["revenue", actualRevenue, money]].forEach(function(row){
+      var key = row[0], actual = row[1] || 0, fmt = row[2];
       var target = targets[key];
       var pct = target > 0 ? actual / target : 0;
-      $("a-" + key).textContent = int(actual);
+      $("a-" + key).textContent = fmt(actual);
       $("b-" + key).style.width = Math.min(100, pct * 100) + "%";
       $("t-" + key).classList.toggle("behind", pct < pace && pct < 1);
     });
