@@ -198,11 +198,6 @@
   var actuals = { leads: 0, workshopSales: 0, clients: 0, updated: null };
   var targets = { leads: 0, sales: 0, clients: 0 };
 
-  try {
-    var saved = JSON.parse(localStorage.getItem("northstar-calc") || "{}");
-    fields.forEach(function(f){ if (saved[f] != null) $(f).value = saved[f]; });
-  } catch(e){}
-
   // matches Growth Math sheet formulas exactly:
   // Gross profit = (Operating expenses + Personal expenses + Net profit) / (1 - Estimated tax %)
   // Clients = Gross profit / Offer price
@@ -232,10 +227,6 @@
     $("n-sales").textContent   = int(targets.sales);
     $("n-clients").textContent = int(targets.clients);
     $("n-revenue").textContent = money(revenue);
-
-    var save = {};
-    fields.forEach(function(f){ save[f] = $(f).value; });
-    try { localStorage.setItem("northstar-calc", JSON.stringify(save)); } catch(e){}
 
     paint();
   }
