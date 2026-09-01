@@ -37,7 +37,6 @@
     -webkit-font-smoothing:antialiased;
   }
 
-  /* inputs */
   .inputs{
     display:grid;
     grid-template-columns:1fr 1fr;
@@ -82,7 +81,6 @@
 
   hr{border:none;border-top:1px solid var(--line);margin:16px 0 14px}
 
-  /* targets */
   .revline{
     font-size:13.5px;
     color:var(--muted);
@@ -91,12 +89,12 @@
   .revline b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
   .targets{
     display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:20px;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;
   }
   .t .label{font-size:13.5px;color:var(--muted)}
   .t .num{
-    font-size:34px;
+    font-size:28px;
     font-weight:700;
     letter-spacing:-.02em;
     font-variant-numeric:tabular-nums;
@@ -138,27 +136,27 @@
 
   @media (max-width:520px){
     .inputs{grid-template-columns:1fr}
-    .targets{gap:14px}
-    .t .num{font-size:27px}
+    .targets{grid-template-columns:repeat(2,1fr)}
+    .t .num{font-size:25px}
   }
 </style>
 </head>
 <body>
 
   <div class="inputs">
-    <div class="row"><label for="profit">Net profit target</label><span class="wrap"><span class="unit">$</span><input id="profit" type="number" min="0" step="1000" value="40000"></span></div>
-    <div class="row"><label for="offer">High ticket price</label><span class="wrap"><span class="unit">$</span><input id="offer" type="number" min="1" step="100" value="5000"></span></div>
+    <div class="row"><label for="profit">Net profit</label><span class="wrap"><span class="unit">$</span><input id="profit" type="number" min="0" step="1000" value="40000"></span></div>
     <div class="row"><label for="opex">Operating expenses</label><span class="wrap"><span class="unit">$</span><input id="opex" type="number" min="0" step="100" value="1200"></span></div>
-    <div class="row"><label for="personal">Personal + debt</label><span class="wrap"><span class="unit">$</span><input id="personal" type="number" min="0" step="100" value="5000"></span></div>
-    <div class="row"><label for="tax">Estimated tax</label><span class="wrap"><input id="tax" type="number" min="0" max="99" step="1" value="0"><span class="unit">%</span></span></div>
+    <div class="row"><label for="personal">Personal expenses</label><span class="wrap"><span class="unit">$</span><input id="personal" type="number" min="0" step="100" value="5000"></span></div>
+    <div class="row"><label for="tax">Estimated tax %</label><span class="wrap"><input id="tax" type="number" min="0" max="99" step="1" value="0"><span class="unit">%</span></span></div>
+    <div class="row"><label for="offer">Offer price</label><span class="wrap"><span class="unit">$</span><input id="offer" type="number" min="1" step="100" value="5000"></span></div>
     <div class="row"><label for="wprice">Workshop price</label><span class="wrap"><span class="unit">$</span><input id="wprice" type="number" min="0" step="1" value="97"></span></div>
-    <div class="row"><label for="wc">Workshop → client</label><span class="wrap"><input id="wc" type="number" min="0.1" max="100" step="0.5" value="10"><span class="unit">%</span></span></div>
-    <div class="row"><label for="lw">Lead → workshop</label><span class="wrap"><input id="lw" type="number" min="0.1" max="100" step="0.5" value="5"><span class="unit">%</span></span></div>
+    <div class="row"><label for="lw">Workshop Signup Rate</label><span class="wrap"><input id="lw" type="number" min="0.1" max="100" step="0.5" value="5"><span class="unit">%</span></span></div>
+    <div class="row"><label for="wc">Workshop Conv Rate</label><span class="wrap"><input id="wc" type="number" min="0.1" max="100" step="0.5" value="10"><span class="unit">%</span></span></div>
   </div>
 
   <hr>
 
-  <div class="revline">Revenue needed this month: <b id="revenue">$0</b></div>
+  <div class="revline">Gross profit needed: <b id="revenue">$0</b></div>
 
   <div class="targets">
     <div class="t" id="t-leads">
@@ -174,10 +172,14 @@
       <div class="sub"><b id="a-sales">0</b> so far</div>
     </div>
     <div class="t" id="t-clients">
-      <div class="label">High ticket sales</div>
+      <div class="label">Clients</div>
       <div class="num" id="n-clients">0</div>
       <div class="bar"><i id="b-clients"></i></div>
       <div class="sub"><b id="a-clients">0</b> so far</div>
+    </div>
+    <div class="t" id="t-revenue">
+      <div class="label">Revenue</div>
+      <div class="num" id="n-revenue">$0</div>
     </div>
   </div>
 
@@ -196,23 +198,24 @@
   var actuals = { leads: 0, workshopSales: 0, clients: 0, updated: null };
   var targets = { leads: 0, sales: 0, clients: 0 };
 
-  // restore saved inputs
   try {
     var saved = JSON.parse(localStorage.getItem("northstar-calc") || "{}");
     fields.forEach(function(f){ if (saved[f] != null) $(f).value = saved[f]; });
   } catch(e){}
 
   // matches Growth Math sheet formulas exactly:
-  // grossProfit = (opex + personal + netProfit) / (1 - tax%)  <- this IS the revenue needed
-  // clients = grossProfit / clientPrice
-  // workshopSales = clients / (workshop->client %)
-  // leads = workshopSales / (lead->workshop %)
+  // Gross profit = (Operating expenses + Personal expenses + Net profit) / (1 - Estimated tax %)
+  // Clients = Gross profit / Offer price
+  // Workshop sales = Clients / Workshop Conv Rate
+  // Leads = Workshop sales / Workshop Signup Rate
+  // Revenue = Workshop sales * Workshop price + Clients * Offer price
   function calc(){
     var profit   = +$("profit").value   || 0;
     var opex     = +$("opex").value     || 0;
     var personal = +$("personal").value || 0;
     var tax      = (+$("tax").value || 0) / 100;
     var offer    = +$("offer").value    || 0;
+    var wprice   = +$("wprice").value   || 0;
     var lw = (+$("lw").value || 0) / 100;
     var wc = (+$("wc").value || 0) / 100;
 
@@ -222,10 +225,13 @@
     targets.sales   = wc > 0 ? Math.ceil(targets.clients / wc) : 0;
     targets.leads   = lw > 0 ? Math.ceil(targets.sales / lw) : 0;
 
+    var revenue = targets.sales * wprice + targets.clients * offer;
+
     $("revenue").textContent   = money(grossProfit);
     $("n-leads").textContent   = int(targets.leads);
     $("n-sales").textContent   = int(targets.sales);
     $("n-clients").textContent = int(targets.clients);
+    $("n-revenue").textContent = money(revenue);
 
     var save = {};
     fields.forEach(function(f){ save[f] = $(f).value; });
