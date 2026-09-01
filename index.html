@@ -91,12 +91,12 @@
   .revline b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
   .targets{
     display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:16px;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
   }
   .t .label{font-size:13.5px;color:var(--muted)}
   .t .num{
-    font-size:30px;
+    font-size:34px;
     font-weight:700;
     letter-spacing:-.02em;
     font-variant-numeric:tabular-nums;
@@ -138,7 +138,7 @@
 
   @media (max-width:520px){
     .inputs{grid-template-columns:1fr}
-    .targets{grid-template-columns:repeat(2,1fr)}
+    .targets{gap:14px}
     .t .num{font-size:27px}
   }
 </style>
@@ -179,10 +179,6 @@
       <div class="bar"><i id="b-clients"></i></div>
       <div class="sub"><b id="a-clients">0</b> so far</div>
     </div>
-    <div class="t" id="t-revenue">
-      <div class="label">Total revenue</div>
-      <div class="num" id="n-revenue">$0</div>
-    </div>
   </div>
 
   <div class="foot">
@@ -198,7 +194,7 @@
   var int = function(n){ return Math.round(n).toLocaleString("en-US"); };
 
   var actuals = { leads: 0, workshopSales: 0, clients: 0, updated: null };
-  var targets = { leads: 0, sales: 0, clients: 0, revenue: 0 };
+  var targets = { leads: 0, sales: 0, clients: 0 };
 
   // restore saved inputs
   try {
@@ -207,18 +203,16 @@
   } catch(e){}
 
   // matches Growth Math sheet formulas exactly:
-  // grossProfit = (opex + personal + netProfit) / (1 - tax%)
+  // grossProfit = (opex + personal + netProfit) / (1 - tax%)  <- this IS the revenue needed
   // clients = grossProfit / clientPrice
   // workshopSales = clients / (workshop->client %)
   // leads = workshopSales / (lead->workshop %)
-  // revenue = workshopSales * workshopPrice + clients * clientPrice
   function calc(){
     var profit   = +$("profit").value   || 0;
     var opex     = +$("opex").value     || 0;
     var personal = +$("personal").value || 0;
     var tax      = (+$("tax").value || 0) / 100;
     var offer    = +$("offer").value    || 0;
-    var wprice   = +$("wprice").value   || 0;
     var lw = (+$("lw").value || 0) / 100;
     var wc = (+$("wc").value || 0) / 100;
 
@@ -227,13 +221,11 @@
     targets.clients = offer > 0 ? Math.ceil(grossProfit / offer) : 0;
     targets.sales   = wc > 0 ? Math.ceil(targets.clients / wc) : 0;
     targets.leads   = lw > 0 ? Math.ceil(targets.sales / lw) : 0;
-    targets.revenue = targets.sales * wprice + targets.clients * offer;
 
-    $("revenue").textContent   = money(targets.revenue);
+    $("revenue").textContent   = money(grossProfit);
     $("n-leads").textContent   = int(targets.leads);
     $("n-sales").textContent   = int(targets.sales);
     $("n-clients").textContent = int(targets.clients);
-    $("n-revenue").textContent = money(targets.revenue);
 
     var save = {};
     fields.forEach(function(f){ save[f] = $(f).value; });
