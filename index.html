@@ -1,1 +1,322 @@
-$(cat /home/claude/index.html)
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>North Star</title>
+<style>
+  :root{
+    --bg: #191919;
+    --text: #e8e6e3;
+    --muted: #918f8b;
+    --line: #33322f;
+    --field: #232323;
+    --field-focus: #2b2b2b;
+    --good: #6fbf9e;
+    --wait: #d9b36a;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg: #ffffff;
+      --text: #37352f;
+      --muted: #8f8d87;
+      --line: #ebeae7;
+      --field: #f5f4f2;
+      --field-focus: #ecebe8;
+      --good: #2f8f6b;
+      --wait: #b07f2a;
+    }
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg)}
+  body{
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    color:var(--text);
+    padding:18px 20px 20px;
+    max-width:640px;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .inputs{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px 24px;
+  }
+  .row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    min-height:32px;
+  }
+  .row label{
+    font-size:13.5px;
+    color:var(--muted);
+    white-space:nowrap;
+  }
+  .row .wrap{
+    display:flex;
+    align-items:center;
+    background:var(--field);
+    border-radius:6px;
+    padding:0 8px;
+  }
+  .row .wrap:focus-within{background:var(--field-focus)}
+  .row .unit{font-size:13.5px;color:var(--muted)}
+  .row input{
+    font:inherit;
+    font-size:14.5px;
+    font-variant-numeric:tabular-nums;
+    color:var(--text);
+    background:none;
+    border:none;
+    outline:none;
+    text-align:right;
+    width:78px;
+    padding:5px 2px;
+  }
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  input[type=number]{-moz-appearance:textfield;appearance:textfield}
+
+  hr{border:none;border-top:1px solid var(--line);margin:16px 0 14px}
+
+  .revline{
+    font-size:13.5px;
+    color:var(--muted);
+    margin-bottom:12px;
+  }
+  .revline b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+  .targets{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;
+  }
+  .t .label{font-size:13.5px;color:var(--muted)}
+  .t .num{
+    font-size:28px;
+    font-weight:700;
+    letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums;
+    line-height:1.15;
+    margin:2px 0 8px;
+  }
+  .bar{
+    height:4px;
+    border-radius:2px;
+    background:var(--line);
+    overflow:hidden;
+  }
+  .bar i{
+    display:block;
+    height:100%;
+    width:0%;
+    border-radius:2px;
+    background:var(--good);
+    transition:width .35s ease;
+  }
+  .t.behind .bar i{background:var(--wait)}
+  .t .sub{
+    font-size:12.5px;
+    color:var(--muted);
+    margin-top:6px;
+    font-variant-numeric:tabular-nums;
+  }
+  .t .sub b{color:var(--text);font-weight:600}
+
+  .foot{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    margin-top:16px;
+    font-size:12.5px;
+    color:var(--muted);
+    font-variant-numeric:tabular-nums;
+  }
+
+  @media (max-width:520px){
+    .inputs{grid-template-columns:1fr}
+    .targets{grid-template-columns:repeat(2,1fr)}
+    .t .num{font-size:25px}
+  }
+</style>
+</head>
+<body>
+
+  <div class="inputs">
+    <div class="row"><label for="profit">Net profit</label><span class="wrap"><span class="unit">$</span><input id="profit" type="number" min="0" step="1000" value="40000"></span></div>
+    <div class="row"><label for="opex">Operating expenses</label><span class="wrap"><span class="unit">$</span><input id="opex" type="number" min="0" step="100" value="1200"></span></div>
+    <div class="row"><label for="personal">Personal expenses</label><span class="wrap"><span class="unit">$</span><input id="personal" type="number" min="0" step="100" value="5000"></span></div>
+    <div class="row"><label for="tax">Estimated tax %</label><span class="wrap"><input id="tax" type="number" min="0" max="99" step="1" value="0"><span class="unit">%</span></span></div>
+    <div class="row"><label for="offer">Offer price</label><span class="wrap"><span class="unit">$</span><input id="offer" type="number" min="1" step="100" value="5000"></span></div>
+    <div class="row"><label for="wprice">Workshop price</label><span class="wrap"><span class="unit">$</span><input id="wprice" type="number" min="0" step="1" value="97"></span></div>
+    <div class="row"><label for="lw">Workshop Signup Rate</label><span class="wrap"><input id="lw" type="number" min="0.1" max="100" step="0.5" value="5"><span class="unit">%</span></span></div>
+    <div class="row"><label for="wc">Workshop Conv Rate</label><span class="wrap"><input id="wc" type="number" min="0.1" max="100" step="0.5" value="10"><span class="unit">%</span></span></div>
+  </div>
+
+  <hr>
+
+  <div class="revline">Gross profit: <b id="revenue">$0</b></div>
+
+  <div class="targets">
+    <div class="t" id="t-leads">
+      <div class="label">Leads</div>
+      <div class="num" id="n-leads">0</div>
+      <div class="bar"><i id="b-leads"></i></div>
+      <div class="sub"><b id="a-leads">0</b> active leads</div>
+    </div>
+    <div class="t" id="t-sales">
+      <div class="label">Workshop sales</div>
+      <div class="num" id="n-sales">0</div>
+      <div class="bar"><i id="b-sales"></i></div>
+      <div class="sub"><b id="a-sales">0</b> so far</div>
+    </div>
+    <div class="t" id="t-clients">
+      <div class="label">Clients</div>
+      <div class="num" id="n-clients">0</div>
+      <div class="bar"><i id="b-clients"></i></div>
+      <div class="sub"><b id="a-clients">0</b> so far</div>
+    </div>
+    <div class="t" id="t-revenue">
+      <div class="label">Revenue</div>
+      <div class="num" id="n-revenue">$0</div>
+      <div class="bar"><i id="b-revenue"></i></div>
+      <div class="sub"><b id="a-revenue">$0</b> so far</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span id="pace"></span>
+    <span id="stamp"></span>
+  </div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var fields = ["profit","opex","personal","tax","offer","wprice","lw","wc"];
+  var money = function(n){ return "$" + Math.round(n).toLocaleString("en-US"); };
+  var int = function(n){ return Math.round(n).toLocaleString("en-US"); };
+
+  var SHEET_ID = "1NXo-HeVsHd2TNomCDkrNSd-SiPUc3U_eXLgMdzQZHAQ";
+  var SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?tqx=out:csv&sheet=Sheet1";
+
+  var actuals = { leads: 0, workshopSales: 0, clients: 0, updated: null };
+  var targets = { leads: 0, sales: 0, clients: 0, revenue: 0 };
+
+  // matches Growth Math sheet formulas exactly (B12:B16):
+  // Revenue         = Operating expenses + (Net profit + Personal expenses) / (1 - Estimated tax %)
+  // Gross profit     = (Revenue - Operating expenses) * (1 - Estimated tax %)
+  // Leads            = Revenue / (Workshop Signup Rate * (Workshop price + Workshop Conv Rate * Offer price))
+  // Workshop sales   = Leads * Workshop Signup Rate
+  // Clients          = Workshop sales * Workshop Conv Rate
+  function calc(){
+    var profit   = +$("profit").value   || 0;
+    var opex     = +$("opex").value     || 0;
+    var personal = +$("personal").value || 0;
+    var tax      = (+$("tax").value || 0) / 100;
+    var offer    = +$("offer").value    || 0;
+    var wprice   = +$("wprice").value   || 0;
+    var lw = (+$("lw").value || 0) / 100;
+    var wc = (+$("wc").value || 0) / 100;
+
+    var revenue = tax < 1 ? opex + (profit + personal) / (1 - tax) : 0;
+    var grossProfit = (revenue - opex) * (1 - tax);
+
+    var denom = lw * (wprice + wc * offer);
+    targets.leads   = denom > 0 ? Math.ceil(revenue / denom) : 0;
+    targets.sales   = Math.ceil(targets.leads * lw);
+    targets.clients = Math.ceil(targets.sales * wc);
+    targets.revenue = targets.sales * wprice + targets.clients * offer;
+
+    $("revenue").textContent   = money(grossProfit);
+    $("n-leads").textContent   = int(targets.leads);
+    $("n-sales").textContent   = int(targets.sales);
+    $("n-clients").textContent = int(targets.clients);
+    $("n-revenue").textContent = money(targets.revenue);
+
+    paint();
+  }
+
+  function paint(){
+    var now = new Date();
+    var day = now.getDate();
+    var days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    var pace = day / days;
+
+    var wprice = +$("wprice").value || 0;
+    var offer  = +$("offer").value  || 0;
+    var actualRevenue = (actuals.workshopSales || 0) * wprice + (actuals.clients || 0) * offer;
+
+    [["leads", actuals.leads, int],
+     ["sales", actuals.workshopSales, int],
+     ["clients", actuals.clients, int],
+     ["revenue", actualRevenue, money]].forEach(function(row){
+      var key = row[0], actual = row[1] || 0, fmt = row[2];
+      var target = targets[key];
+      var pct = target > 0 ? actual / target : 0;
+      $("a-" + key).textContent = fmt(actual);
+      $("b-" + key).style.width = Math.min(100, pct * 100) + "%";
+      $("t-" + key).classList.toggle("behind", pct < pace && pct < 1);
+    });
+
+    $("pace").textContent = "Day " + day + " of " + days +
+      " · month pace " + Math.round(pace * 100) + "%";
+    $("stamp").textContent = actuals.updated
+      ? "Actuals updated " + actuals.updated
+      : "Actuals not synced yet";
+  }
+
+  function num(s){
+    return parseFloat(String(s || "").replace(/[^0-9.\-]/g, "")) || 0;
+  }
+
+  function parseSheetCSV(text){
+    var map = {};
+    text.trim().split("\n").forEach(function(line){
+      var m = line.match(/^"([^"]*)"\s*,\s*"([^"]*)"\s*$/);
+      if (m) map[m[1].trim()] = m[2].trim();
+    });
+    return map;
+  }
+
+  function applySheetInputs(map){
+    if ("Net profit" in map)             $("profit").value   = num(map["Net profit"]);
+    if ("Operating expenses" in map)     $("opex").value      = num(map["Operating expenses"]);
+    if ("Personal expenses" in map)      $("personal").value  = num(map["Personal expenses"]);
+    if ("Estimated tax %" in map)        $("tax").value       = num(map["Estimated tax %"]);
+    if ("Offer price" in map)            $("offer").value     = num(map["Offer price"]);
+    if ("Workshop price" in map)         $("wprice").value    = num(map["Workshop price"]);
+    if ("Workshop Signup Rate" in map)   $("lw").value         = num(map["Workshop Signup Rate"]);
+    if ("Workshop Conv Rate" in map)     $("wc").value         = num(map["Workshop Conv Rate"]);
+  }
+
+  fields.forEach(function(f){ $(f).addEventListener("input", calc); });
+
+  // Pull current inputs from the Growth Math sheet, then recalc.
+  // Edit the sheet, reload this page, targets update. No redeploy needed.
+  fetch(SHEET_CSV_URL + "&ts=" + Date.now())
+    .then(function(r){ return r.ok ? r.text() : null; })
+    .then(function(text){
+      if (text) applySheetInputs(parseSheetCSV(text));
+      calc();
+    })
+    .catch(function(){ calc(); });
+
+  fetch("./actuals.json?ts=" + Date.now())
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(data){
+      if (data) {
+        actuals.leads = +data.leads || 0;
+        actuals.workshopSales = +data.workshopSales || 0;
+        actuals.clients = +data.clients || 0;
+        actuals.updated = data.updated || null;
+      }
+      paint();
+    })
+    .catch(function(){ paint(); });
+
+  calc();
+})();
+</script>
+</body>
+</html>
